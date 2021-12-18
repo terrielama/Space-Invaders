@@ -6,3 +6,10 @@ use crate::{
 };
 
 pub struct JoueurPlugin;
+
+//implementation du joueur
+impl Plugin for PlayerPlugin {}
+
+
+
+
