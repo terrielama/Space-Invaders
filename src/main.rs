@@ -87,15 +87,61 @@ impl Default for Speed {
 	}
 }
 
+//main
+
+fn main() {
+	App::build()
+		.insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
+		.insert_resource(WindowDescriptor {
+			title: "Rust Invaders!".to_string(),
+			width: 598.0,
+			height: 676.0,
+			..Default::default()
+		})
+		.insert_resource(ActiveEnemies(0))
+		.add_plugins(DefaultPlugins)
+		.add_plugin(JoueurPlugin)
+		.add_plugin(EnemiesPlugin)
+		.add_startup_system(setup.system())
+		.add_system(joueur_laser_hit_enemies.system())
+		.add_system(enemies_laser_hit_player.system())
+		.add_system(explosion_to_spawn.system())
+		.add_system(animate_explosion.system())
+		.run();
+}
 
 
 
 
 
+fn setup(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+	mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+	mut windows: ResMut<Windows>,
+) {
+	let window = windows.get_primary_mut().unwrap();
 
+	// camera
+	commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
+	// ressources du  main 
+	let texture_handle = asset_server.load(EXPLOSION_SHEET);
+	let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(64.0, 64.0), 4, 4);
+	commands.insert_resource(Materials {
+		joueur: materials.add(asset_server.load(JOUEUR_SPRITE).into()),
+		joueur_laser: materials.add(asset_server.load(JOUEUR_LASER_SPRITE).into()),
+		enemies: materials.add(asset_server.load(ENEMIES_SPRITE).into()),
+		enemies_laser: materials.add(asset_server.load(ENEMIES_LASER_SPRITE).into()),
+		explosion: texture_atlases.add(texture_atlas),
+	});
+	commands.insert_resource(WinSize {
+		w: window.width(),
+		h: window.height(),
+	});
 
-
+	// position de la fenetre (window)
 
 
 
