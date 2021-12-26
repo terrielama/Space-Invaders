@@ -17,7 +17,7 @@ const ENEMIES_LASER_SPRITE: &str = "laser2.png";
 const EXPLOSION_SHEET: &str = "explosions.png";
 const SCALE: f32 = 0.5;
 const TIME_STEP: f32 = 1. / 60.;
-const MAX_ENEMIES: u32 = 4;
+const MAX_ENEMIESS: u32 = 4;
 const MAX_FORMATION_MEMBRES: u32 = 2;
 const JOUEUR_RESPAWN_DELAY: f64 = 2.;
 
@@ -37,7 +37,7 @@ struct WinSize {
 	w: f32,
 	h: f32,
 }
-struct ActiveEnemies(u32);
+struct ActiveEnemiess(u32);
 
 
 
@@ -98,7 +98,7 @@ fn main() {
 			height: 676.0,
 			..Default::default()
 		})
-		.insert_resource(ActiveEnemies(0))
+		.insert_resource(ActiveEnemiess(0))
 		.add_plugins(DefaultPlugins)
 		.add_plugin(JoueurPlugin)
 		.add_plugin(EnemiesPlugin)
