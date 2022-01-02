@@ -8,21 +8,21 @@ use crate::{
 pub struct JoueurPlugin;
 
 //implementation du joueur
-impl Plugin for PlayerPlugin {
+impl Plugin for JoueurPlugin {
 		fn build(&self, app: &mut AppBuilder) {
 		app
 			.insert_resource(JoueurState::default())
 			.add_startup_stage(
 				"game_setup_actors",
-				SystemStage::single(pjoueur_spawn.system()),
+				SystemStage::single(joueur_spawn.system()),
 			)
-			.add_system(oueur_mouvement.system())
-			.add_system(oueur_fire.system())
+			.add_system(joueur_mouvement.system())
+			.add_system(joueur_fire.system())
 			.add_system(laser_mouvement.system())
 			.add_system_set(
 				SystemSet::new()
 					.with_run_criteria(FixedTimestep::step(0.5))
-					.with_system(player_spawn.system()),
+					.with_system(joueur_spawn.system()),
 			);
 	}
 }
@@ -50,17 +50,17 @@ fn joueur_spawn(
 				},
 				..Default::default()
 			})
-			.insert(Player)
-			.insert(PlayerReadyFire(true))
+			.insert(Joueur)
+			.insert(JoueurReadyFire(true))
 			.insert(Speed::default());
 
 		joueur_state.spawned();
 	}
 }
 
-fn player_movement(
+fn joueur_mouvement(
 	keyboard_input: Res<Input<KeyCode>>,
-	mut query: Query<(&Speed, &mut Transform), With<Player>>,
+	mut query: Query<(&Speed, &mut Transform), With<Joueur>>,
 ) {
 	if let Ok((speed, mut transform)) = query.single_mut() {
 		let dir = if keyboard_input.pressed(KeyCode::Left) {
@@ -89,7 +89,7 @@ fn joueur_fire(
 			let mut spawn_lasers = |x_offset: f32| {
 				commands
 					.spawn_bundle(SpriteBundle {
-						material: materials.Joueur_laser.clone(),
+						material: materials.joueur_laser.clone(),
 						transform: Transform {
 							translation: Vec3::new(x + x_offset, y + 15., 0.),
 							scale: Vec3::new(SCALE, SCALE, 1.),
@@ -118,7 +118,7 @@ fn joueur_fire(
 fn laser_mouvement(
 	mut commands: Commands,
 	win_size: Res<WinSize>,
-	mut query: Query<(Entity, &Speed, &mut Transform), (With<Laser>, With<FromPlayer>)>,
+	mut query: Query<(Entity, &Speed, &mut Transform), (With<Laser>, With<FromJoueur>)>,
 ) {
 	for (laser_entity, speed, mut laser_tf) in query.iter_mut() {
 		let translation = &mut laser_tf.translation;
@@ -128,24 +128,6 @@ fn laser_mouvement(
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
