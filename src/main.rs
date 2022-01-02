@@ -4,7 +4,7 @@ mod joueur;
 
 use std::collections::HashSet;
 
-use bevy::{prelude::*, sprite::collision_aabb::collision};
+use bevy::{prelude::*, sprite::collide_aabb::collide};
 use enemies::EnemiesPlugin;
 use joueur::JoueurPlugin;
 
@@ -104,7 +104,7 @@ fn main() {
 		.add_plugin(EnemiesPlugin)
 		.add_startup_system(setup.system())
 		.add_system(joueur_laser_hit_enemies.system())
-		.add_system(enemies_laser_hit_player.system())
+		.add_system(enemies_laser_hit_joueur.system())
 		.add_system(explosion_to_spawn.system())
 		.add_system(animate_explosion.system())
 		.run();
@@ -119,8 +119,10 @@ fn setup(
 	asset_server: Res<AssetServer>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
 	mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-	mut windows: ResMut<Windows>,
-) {
+	mut windows: ResMut<Windows>,) 
+	
+	{
+	
 	let window = windows.get_primary_mut().unwrap();
 
 	// camera
@@ -142,12 +144,12 @@ fn setup(
 	});
 
 	// position de la fenetre (window)
-
+}
 
 fn joueur_laser_hit_enemies(
 	mut commands: Commands,
 	laser_query: Query<(Entity, &Transform, &Sprite), (With<Laser>, With<FromJoueur>)>,
-	enemy_query: Query<(Entity, &Transform, &Sprite), With<Enemies>>,
+	enemies_query: Query<(Entity, &Transform, &Sprite), With<Enemies>>,
 	mut active_enemiess: ResMut<ActiveEnemiess>,
 ) {
 	let mut enemiess_blasted: HashSet<Entity> = HashSet::new();
@@ -156,15 +158,15 @@ fn joueur_laser_hit_enemies(
 		for (enemies_entity, enemies_tf, enemies_sprite) in enemies_query.iter() {
 			let laser_scale = Vec2::from(laser_tf.scale);
 			let enemies_scale = Vec2::from(enemies_tf.scale);
-			let collision = collision(
+			let collision = collide(
 				laser_tf.translation,
 				laser_sprite.size * laser_scale,
-				enemy_tf.translation,
-				enemy_sprite.size * enemy_scale,
+				enemies_tf.translation,
+				enemies_sprite.size * enemies_scale,
 			);
 
 			if let Some(_) = collision {
-				if enemiess_blasted.get(&enemiess_entity).is_none() {
+				if enemiess_blasted.get(&enemies_entity).is_none() {
 					// suppr l'enemies
 					commands.entity(enemies_entity).despawn();
 					active_enemiess.0 -= 1;
@@ -197,7 +199,7 @@ fn enemies_laser_hit_joueur(
 		// pour chaque laser tiré par les enemies
 		for (laser_entity, laser_tf, laser_sprite) in laser_query.iter() {
 			let laser_size = laser_sprite.size * Vec2::from(laser_tf.scale.abs());
-			//les collision
+			//les collisions
 			let collision = collide(
 				laser_tf.translation,
 				laser_size,
@@ -207,14 +209,14 @@ fn enemies_laser_hit_joueur(
 			// traitement des  collisions
 			if let Some(_) = collision {
 				// disparition du joueur
-				commands.entity(player_entity).despawn();
+				commands.entity(joueur_entity).despawn();
 				joueur_state.shot(time.seconds_since_startup());
 				//disparition du laser
 				commands.entity(laser_entity).despawn();
 				//utilisation de la fonction  ExplosionToSpawn 
 				commands
 					.spawn()
-					.insert(ExplosionToSpawn(player_tf.translation.clone()));
+					.insert(ExplosionToSpawn(joueur_tf.translation.clone()));
 			}
 		}
 	}
@@ -267,8 +269,4 @@ fn animate_explosion(
 			}
 		}
 	}
-}	
-
-
-
-
+}
