@@ -1,8 +1,9 @@
+
 use std::f32::consts::PI;
 
 use crate::{
 	ActiveEnemiess, Enemies, FromEnemies, Laser, Materials, Speed, WinSize, MAX_ENEMIESS,
-	MAX_FORMATION_MEMBERS, SCALE, TIME_STEP,
+	MAX_FORMATION_MEMBRES, SCALE, TIME_STEP,
 };
 use bevy::{core::FixedTimestep, prelude::*};
 use rand::{thread_rng, Rng};
@@ -84,12 +85,12 @@ impl Plugin for EnemiesPlugin {
 	fn build(&self, app: &mut bevy::prelude::AppBuilder) {
 		app
 			.insert_resource(FormationMaker::default())
-			.add_system(enemies_laser_movement.system())
-			.add_system(enemies_movement.system())
+			.add_system(enemies_laser_mouvement.system())
+			.add_system(enemies_mouvement.system())
 			.add_system_set(
 				SystemSet::new()
 					.with_run_criteria(FixedTimestep::step(1.0))
-					.with_system(enemy_spawn.system()),
+					.with_system(enemies_spawn.system()),
 			)
 			.add_system_set(
 				SystemSet::new()
@@ -132,7 +133,7 @@ fn enemies_spawn(
 }
 
 
-fn enemy_movement(mut query: Query<(&mut Transform, &Speed, &mut Formation), With<Enemy>>) {
+fn enemies_mouvement(mut query: Query<(&mut Transform, &Speed, &mut Formation), With<Enemies>>) {
 	// pour chaque enemies
 	for (mut tf, speed, mut formation) in query.iter_mut() {
 		let max_distance = TIME_STEP * speed.0;
@@ -181,7 +182,7 @@ fn enemy_movement(mut query: Query<(&mut Transform, &Speed, &mut Formation), Wit
 fn enemies_fire(
 	mut commands: Commands,
 	materials: Res<Materials>,
-	enemies_query: Query<&Transform, With<Enemy>>,
+	enemies_query: Query<&Transform, With<Enemies>>,
 ) {
 	// pour chaque tire de laser des enemies
 	for &tf in enemies_query.iter() {
@@ -219,14 +220,5 @@ fn enemies_laser_mouvement(
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
 
 
