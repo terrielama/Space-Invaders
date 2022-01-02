@@ -3,6 +3,8 @@
 
 **SPACE INVADERS**   est un shoot'em up fixe (abattez-les tous ),c'est a dire un jeu d'action, il est dit "fixe" car le fond de l'écran ne bouge pas.
 
+commande : cargo run --features bevy/dynamic 
+
 
 - **BUT DU JEU**
 
