@@ -144,8 +144,130 @@ fn setup(
 	// position de la fenetre (window)
 
 
+fn joueur_laser_hit_enemies(
+	mut commands: Commands,
+	laser_query: Query<(Entity, &Transform, &Sprite), (With<Laser>, With<FromJoueur>)>,
+	enemy_query: Query<(Entity, &Transform, &Sprite), With<Enemies>>,
+	mut active_enemiess: ResMut<ActiveEnemiess>,
+) {
+	let mut enemiess_blasted: HashSet<Entity> = HashSet::new();
 
+	for (laser_entity, laser_tf, laser_sprite) in laser_query.iter() {
+		for (enemies_entity, enemies_tf, enemies_sprite) in enemies_query.iter() {
+			let laser_scale = Vec2::from(laser_tf.scale);
+			let enemies_scale = Vec2::from(enemies_tf.scale);
+			let collision = collision(
+				laser_tf.translation,
+				laser_sprite.size * laser_scale,
+				enemy_tf.translation,
+				enemy_sprite.size * enemy_scale,
+			);
 
+			if let Some(_) = collision {
+				if enemiess_blasted.get(&enemiess_entity).is_none() {
+					// suppr l'enemies
+					commands.entity(enemies_entity).despawn();
+					active_enemiess.0 -= 1;
+
+					// apparition de l'explosion
+					commands
+						.spawn()
+						.insert(ExplosionToSpawn(enemies_tf.translation.clone()));
+
+					enemiess_blasted.insert(enemies_entity);
+				}
+
+				// disparition du laser
+				commands.entity(laser_entity).despawn();
+			}
+		}
+	}
+}
+
+	
+fn enemies_laser_hit_joueur(
+	mut commands: Commands,
+	mut joueur_state: ResMut<JoueurState>,
+	time: Res<Time>,
+	laser_query: Query<(Entity, &Transform, &Sprite), (With<Laser>, With<FromEnemies>)>,
+	joueur_query: Query<(Entity, &Transform, &Sprite), With<Joueur>>,
+) {
+	if let Ok((joueur_entity, joueur_tf, joueur_sprite)) = joueur_query.single() {
+		let joueur_size = joueur_sprite.size * Vec2::from(joueur_tf.scale.abs());
+		// pour chaque laser tiré par les enemies
+		for (laser_entity, laser_tf, laser_sprite) in laser_query.iter() {
+			let laser_size = laser_sprite.size * Vec2::from(laser_tf.scale.abs());
+			//les collision
+			let collision = collide(
+				laser_tf.translation,
+				laser_size,
+				joueur_tf.translation,
+				joueur_size,
+			);
+			// traitement des  collisions
+			if let Some(_) = collision {
+				// disparition du joueur
+				commands.entity(player_entity).despawn();
+				joueur_state.shot(time.seconds_since_startup());
+				//disparition du laser
+				commands.entity(laser_entity).despawn();
+				//utilisation de la fonction  ExplosionToSpawn 
+				commands
+					.spawn()
+					.insert(ExplosionToSpawn(player_tf.translation.clone()));
+			}
+		}
+	}
+}	
+	
+	
+fn explosion_to_spawn(
+	mut commands: Commands,
+	query: Query<(Entity, &ExplosionToSpawn)>,
+	materials: Res<Materials>,
+) {
+	for (explosion_spawn_entity, explosion_to_spawn) in query.iter() {
+		commands
+			.spawn_bundle(SpriteSheetBundle {
+				texture_atlas: materials.explosion.clone(),
+				transform: Transform {
+					translation: explosion_to_spawn.0,
+					..Default::default()
+				},
+				..Default::default()
+			})
+			.insert(Explosion)
+			.insert(Timer::from_seconds(0.05, true));
+
+		commands.entity(explosion_spawn_entity).despawn();
+	}
+}	
+	
+fn animate_explosion(
+	mut commands: Commands,
+	time: Res<Time>,
+	texture_atlases: Res<Assets<TextureAtlas>>,
+	mut query: Query<
+		(
+			Entity,
+			&mut Timer,
+			&mut TextureAtlasSprite,
+			&Handle<TextureAtlas>,
+		),
+		With<Explosion>,
+	>,
+) {
+	for (entity, mut timer, mut sprite, texture_atlas_handle) in query.iter_mut() {
+		timer.tick(time.delta());
+		if timer.finished() {
+			let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+			sprite.index += 1;
+			if sprite.index == texture_atlas.textures.len() as u32 {
+				commands.entity(entity).despawn();
+			}
+		}
+	}
+}	
 
 
 
