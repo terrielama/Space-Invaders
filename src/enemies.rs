@@ -132,6 +132,98 @@ fn enemies_spawn(
 }
 
 
+fn enemy_movement(mut query: Query<(&mut Transform, &Speed, &mut Formation), With<Enemy>>) {
+	// pour chaque enemies
+	for (mut tf, speed, mut formation) in query.iter_mut() {
+		let max_distance = TIME_STEP * speed.0;
+		let x_org = tf.translation.x;
+		let y_org = tf.translation.y;
+
+	
+		let (x_offset, y_offset) = formation.offset;
+		let (x_radius, y_radius) = formation.radius;
+
+		// prochain angle
+		let dir = if formation.start.0 > 0. { 1. } else { -1. };
+		let angle = formation.angle + dir * speed.0 * TIME_STEP / (x_radius.min(y_radius) * PI / 2.);
+
+		// Calculation de la destination
+		let x_dst = x_radius * angle.cos() + x_offset;
+		let y_dst = y_radius * angle.sin() + y_offset;
+		// Calculation de la  distance
+		let dx = x_org - x_dst;
+		let dy = y_org - y_dst;
+		let distance = (dx * dx + dy * dy).sqrt();
+		let distance_ratio = if distance == 0. {
+			0.
+		} else {
+			max_distance / distance
+		};
+
+		// calcul pour la final
+		let x = x_org - dx * distance_ratio;
+		let x = if dx > 0. { x.max(x_dst) } else { x.min(x_dst) };
+		let y = y_org - dy * distance_ratio;
+		let y = if dy > 0. { y.max(y_dst) } else { y.min(y_dst) };
+
+		// commencer la rotation de la formation des  angles
+		if distance < max_distance * speed.0 / 20. {
+			formation.angle = angle;
+		}
+
+		//  tranformation
+		tf.translation.x = x;
+		tf.translation.y = y;
+	}
+}
+
+
+fn enemies_fire(
+	mut commands: Commands,
+	materials: Res<Materials>,
+	enemies_query: Query<&Transform, With<Enemy>>,
+) {
+	// pour chaque tire de laser des enemies
+	for &tf in enemies_query.iter() {
+		let x = tf.translation.x;
+		let y = tf.translation.y;
+		//  laser sprite des enemies
+		commands
+			.spawn_bundle(SpriteBundle {
+				material: materials.enemies_laser.clone(),
+				transform: Transform {
+					translation: Vec3::new(x, y - 15., 0.),
+					scale: Vec3::new(SCALE, -SCALE, 1.),
+					..Default::default()
+				},
+				..Default::default()
+			})
+			.insert(Laser)
+			.insert(FromEnemies)
+			.insert(Speed::default());
+	}
+}
+
+
+
+fn enemies_laser_mouvement(
+	mut commands: Commands,
+	win_size: Res<WinSize>,
+	mut laser_query: Query<(Entity, &Speed, &mut Transform), (With<Laser>, With<FromEnemies>)>,
+) {
+	// chaque tire d'enemies
+	for (entity, speed, mut tf) in laser_query.iter_mut() {
+		tf.translation.y -= speed.0 * TIME_STEP;
+		if tf.translation.y < -win_size.h / 2. - 50. {
+			commands.entity(entity).despawn();
+		}
+	}
+}
+
+
+
+
+
 
 
 
