@@ -115,6 +115,19 @@ fn joueur_fire(
 	}
 }
 
+fn laser_mouvement(
+	mut commands: Commands,
+	win_size: Res<WinSize>,
+	mut query: Query<(Entity, &Speed, &mut Transform), (With<Laser>, With<FromPlayer>)>,
+) {
+	for (laser_entity, speed, mut laser_tf) in query.iter_mut() {
+		let translation = &mut laser_tf.translation;
+		translation.y += speed.0 * TIME_STEP;
+		if translation.y > win_size.h {
+			commands.entity(laser_entity).despawn();
+		}
+	}
+}
 
 
 
