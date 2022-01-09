@@ -148,10 +148,10 @@ fn enemies_mouvement(mut query: Query<(&mut Transform, &Speed, &mut Formation), 
 		let dir = if formation.start.0 > 0. { 1. } else { -1. };
 		let angle = formation.angle + dir * speed.0 * TIME_STEP / (x_radius.min(y_radius) * PI / 2.);
 
-		// Calculation de la destination
+		// Calcul de la destination
 		let x_dst = x_radius * angle.cos() + x_offset;
 		let y_dst = y_radius * angle.sin() + y_offset;
-		// Calculation de la  distance
+		// Calcul de la  distance
 		let dx = x_org - x_dst;
 		let dy = y_org - y_dst;
 		let distance = (dx * dx + dy * dy).sqrt();
@@ -167,7 +167,7 @@ fn enemies_mouvement(mut query: Query<(&mut Transform, &Speed, &mut Formation), 
 		let y = y_org - dy * distance_ratio;
 		let y = if dy > 0. { y.max(y_dst) } else { y.min(y_dst) };
 
-		// commencer la rotation de la formation des  angles
+		// commencer la rotation de la formation des angles
 		if distance < max_distance * speed.0 / 20. {
 			formation.angle = angle;
 		}
